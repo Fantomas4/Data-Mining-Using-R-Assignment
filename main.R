@@ -3,8 +3,8 @@
 # Created by: Sierra Kilo
 # Created on: 07-May-20
 
-options(stringsAsFactors=T)
-groceries <- read.csv("GroceriesInitial.csv",header=TRUE,sep=",")
+#options(stringsAsFactors=T)
+groceries <- read.csv("GroceriesInitial.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
 #str(groceries)
 
 # unlist() combines the factor (list) representing each
@@ -15,7 +15,7 @@ groceries <- read.csv("GroceriesInitial.csv",header=TRUE,sep=",")
 productNames <- levels(unlist(groceries[,4:35]))
 #print(productNames)
 
-# remove the "" element from productNames list
+# Remove the "" element from productNames list
 blank <- which(productNames == "") #row 102
 productNames <- productNames[-blank]
 
@@ -29,7 +29,7 @@ productNames <- productNames[-blank]
 productsBinary <- as.data.frame(t(apply(groceries[,4:35],1, function(x)
 (productNames) %in% as.character(unlist(x)))))
 
-## set the names of productsBinary's elements to productNames' names.
+# Set the names of productsBinary's elements to productNames' names.
 names(productsBinary) <- productNames
 
 # Keep only the 13 columns corresponding to the 13 products we need for our analysis
@@ -41,4 +41,17 @@ filteredProductsBinary <- productsBinary[, c("citrus fruit", "tropical fruit", "
 # into a unified data frame.
 groceriesBinary <- cbind(groceries[,1:3], filteredProductsBinary)
 
-str(groceriesBinary)
+#str(groceriesBinary)
+
+# Quantile the basket_value column values into three discreet (and nearly equal) categories
+groceriesDiscrete <- groceriesBinary
+cutPoints <- quantile(groceriesDiscrete$basket_value, probs = seq(0, 1, 1/3), na.rm = TRUE, names = FALSE)
+
+# Divide the range of groceriesDiscrete into intervals and code the values in groceriesDiscrete according
+# to which interval they fall into. For this purpose, a "basket_value_bin" column is added to the data frame,
+# with the labels "Low", "Medium" and "High" used for the resulting category.
+groceriesDiscrete$basket_value_bin <- cut(groceriesDiscrete$basket_value, breaks = cutPoints,
+                                          labels=c("Low","Medium","High"), include.lowest = TRUE)
+
+#table(groceriesDiscrete$basket_value_bin)
+#str(groceriesDiscrete)
