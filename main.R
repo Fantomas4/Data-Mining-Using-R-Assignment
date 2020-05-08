@@ -29,11 +29,16 @@ productNames <- productNames[-blank]
 productsBinary <- as.data.frame(t(apply(groceries[,4:35],1, function(x)
 (productNames) %in% as.character(unlist(x)))))
 
-#print(productNames)
-
-
 ## set the names of productsBinary's elements to productNames' names.
 names(productsBinary) <- productNames
 
+# Keep only the 13 columns corresponding to the 13 products we need for our analysis
+# as stated by the assignment's description.
+filteredProductsBinary <- productsBinary[, c("citrus fruit", "tropical fruit", "whole milk", "other vegetables",
+"rolls/buns", "chocolate", "bottled water", "yogurt", "sausage", "root vegetables", "pastry", "soda", "cream")]
 
-groceriesBinary <- cbind(groceries[,1:3],productsBinary)
+# Combine groceries data frame's columns 1->3 with filteredProductsBinary 13 product columns
+# into a unified data frame.
+groceriesBinary <- cbind(groceries[,1:3], filteredProductsBinary)
+
+str(groceriesBinary)
