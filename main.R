@@ -3,6 +3,8 @@
 # Created by: Sierra Kilo
 # Created on: 07-May-20
 
+# ============================================== Exercise 1 ==============================================
+
 #options(stringsAsFactors=T)
 groceries <- read.csv("GroceriesInitial.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
 #str(groceries)
@@ -54,4 +56,61 @@ groceriesDiscrete$basket_value_bin <- cut(groceriesDiscrete$basket_value, breaks
                                           labels=c("Low","Medium","High"), include.lowest = TRUE)
 
 #table(groceriesDiscrete$basket_value_bin)
+#str(groceriesDiscrete)
+
+
+# ============================================== Exercise 2 ==============================================
+library(arules)
+
+# ========== 2a) ==========
+## Apply apriori method to groceries discrete data with minimum support = 0.001
+#print("rules test 1: ")
+#rulesTest1 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.001)
+#  ,control = list(verbose=FALSE))
+## Check the test results
+#inspect(rulesTest1)
+#
+#
+## Apply apriori method to groceries discrete data with minimum support = 0.2
+#print("rules test 2: ")
+#rulesTest2 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.02)
+#  ,control = list(verbose=FALSE))
+## Check the test results
+#inspect(rulesTest2)
+#
+#
+## Apply apriori method to groceries discrete data with minimum support = 0.8
+#print("rules test 3: ")
+#rulesTest3 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.03)
+#  ,control = list(verbose=FALSE))
+## Check the test results
+#inspect(rulesTest3)
+#
+#
+## Apply apriori method to groceries discrete data with minimum support = 1
+#print("rules test 4: ")
+#rulesTest4 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.04)
+#  ,control = list(verbose=FALSE))
+## Check the test results
+#inspect(rulesTest4)
+
+# ========== 2b) ==========
+productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-1)], parameter = list(minlen=2, supp=0.001)
+  ,control = list(verbose=FALSE))
+
+productRulesByConfidence <- sort(productRules, by="confidence")
+
+inspect(head(productRulesByConfidence, n=20))
+
+
+
+
+
+
+
+
+
+#tData <- as (groceriesDiscrete, "transactions")
+#inspect(head(tData))
+
 #str(groceriesDiscrete)
