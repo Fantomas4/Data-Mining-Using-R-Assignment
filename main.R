@@ -95,12 +95,23 @@ library(arules)
 #inspect(rulesTest4)
 
 # ========== 2b) ==========
-productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-1)], parameter = list(minlen=2, supp=0.001)
+#productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-1)], parameter = list(minlen=2, supp=0.001)
+#  ,control = list(verbose=FALSE))
+#
+#productRulesByConfidence <- sort(productRules, by="confidence")
+#
+#print("Top 20 product rules by Confidence: ")
+#inspect(head(productRulesByConfidence, n=20))
+
+
+# ========== 2c) ==========
+productAndValueRules <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.001)
   ,control = list(verbose=FALSE))
 
-productRulesByConfidence <- sort(productRules, by="confidence")
+productAndValueRulesByConfidence <- sort(productAndValueRules, by="confidence")
 
-inspect(head(productRulesByConfidence, n=20))
+print("Top 20 product and value category rules by Confidence: ")
+inspect(head(productAndValueRulesByConfidence, n=20))
 
 
 
