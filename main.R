@@ -121,20 +121,26 @@ costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
 # Normalize data
 normalizedCostAndRecency <- scale(costAndRecency)
 
-#set.seed(1234)
-kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 50, iter.max = 1000)
-#str(kmeansFit)
+set.seed(1234)
+kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
 
-# Get the denormalized centers
-denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
-r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
-
-denormalizedCenters
-
+## Get the denormalized centers
+#denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
+#r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
 
 # Visualize
-#plot(normalizedCostAndRecency, col = kmeansFit$cluster)
 library("factoextra")
-#fviz_cluster(kmeansFit, normalizedCostAndRecency, ellipse.type = "norm")
-fviz_cluster(kmeansFit, normalizedCostAndRecency, ellipse.type = "convex")
+#fviz_cluster(kmeansFit, normalizedCostAndRecency, ellipse.type = "convex")
+
+# Plot the clustered data returned from kmeans (using normalized axis values)
+ggplot() + geom_point(data = as.data.frame(normalizedCostAndRecency), mapping = aes(x=recency_days, y=basket_value,
+  colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red")
+
+# Plot the clustered data using denormalized axis values
+ggplot() + geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
+  colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red")
+
+
+# ========== 3b) ==========
+
 
