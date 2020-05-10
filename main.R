@@ -105,23 +105,36 @@ library(arules)
 
 
 # ========== 2c) ==========
-productAndValueRules <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.001)
-  ,control = list(verbose=FALSE))
+#productAndValueRules <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.001)
+#  ,control = list(verbose=FALSE))
+#
+#productAndValueRulesByConfidence <- sort(productAndValueRules, by="confidence")
 
-productAndValueRulesByConfidence <- sort(productAndValueRules, by="confidence")
+#print("Top 20 product and value category rules by Confidence: ")
+#inspect(head(productAndValueRulesByConfidence, n=20))
 
-print("Top 20 product and value category rules by Confidence: ")
-inspect(head(productAndValueRulesByConfidence, n=20))
+# ============================================== Exercise 3 ==============================================
+# ========== 3a) ==========
+costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
+#str(costAndRecency)
+
+# Normalize data
+normalizedCostAndRecency <- scale(costAndRecency)
+
+#set.seed(1234)
+kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 50, iter.max = 1000)
+#str(kmeansFit)
+
+# Get the denormalized centers
+denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
+r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
+
+denormalizedCenters
 
 
+# Visualize
+#plot(normalizedCostAndRecency, col = kmeansFit$cluster)
+library("factoextra")
+#fviz_cluster(kmeansFit, normalizedCostAndRecency, ellipse.type = "norm")
+fviz_cluster(kmeansFit, normalizedCostAndRecency, ellipse.type = "convex")
 
-
-
-
-
-
-
-#tData <- as (groceriesDiscrete, "transactions")
-#inspect(head(tData))
-
-#str(groceriesDiscrete)
