@@ -145,12 +145,12 @@ denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
 r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
 
 # Calculate the denormalized centers' mean
-centersMean <- cbind(mean(denormalizedCenters[,'basket_value']), mean(denormalizedCenters[,'recency_days']))
+centersMean <- cbind(mean(denormalizedCenters[,'recency_days']), mean(denormalizedCenters[,'basket_value']))
 print("The mean of the denormalized centers is: ")
 centersMean
 
 # Calculate the denormalized centers' standard deviation
-centersStdev<- cbind(sd(denormalizedCenters[,'basket_value']), sd(denormalizedCenters[,'recency_days']))
+centersStdev<- cbind(sd(denormalizedCenters[,'recency_days']), sd(denormalizedCenters[,'basket_value']))
 print("The standard deviation of the denormalized centers is: ")
 centersStdev
 
@@ -163,3 +163,26 @@ ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
   geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
                                   y = denormalizedCenters[,'basket_value']),
                                   color = "red", size = 4)
+
+# Plot denormalized data + denormalized cluster centers + mean and standard deviation of denormalized cluster centers
+ggplot() + ggtitle("Denormalized clusters + cluster centers + mean of centers + std of centers") +
+
+  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
+  color = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
+
+  geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
+                                  y = denormalizedCenters[,'basket_value']),
+                                  color = "red", size = 4) +
+
+  geom_point(mapping = aes_string(x = centersMean[, 1],
+                                  y = centersMean[, 2]),
+                                  color = "green", size = 6) +
+
+  geom_point(mapping = aes_string(x = centersStdev[, 1],
+                                  y = centersStdev[, 2]),
+                                  color = "yellow", size = 6)
+
+# Visualize the size of each cluster using a pie chart
+pieRecencyValueData<- table(kmeansFit$cluster)
+pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
+pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep=""))
