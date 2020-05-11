@@ -124,23 +124,42 @@ normalizedCostAndRecency <- scale(costAndRecency)
 set.seed(1234)
 kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
 
-## Get the denormalized centers
-#denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
-#r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
-
 # Visualize
 library("factoextra")
 #fviz_cluster(kmeansFit, normalizedCostAndRecency, ellipse.type = "convex")
 
 # Plot the clustered data returned from kmeans (using normalized axis values)
-ggplot() + geom_point(data = as.data.frame(normalizedCostAndRecency), mapping = aes(x=recency_days, y=basket_value,
+ggplot() + ggtitle("Normalized clusters") +
+  geom_point(data = as.data.frame(normalizedCostAndRecency), mapping = aes(x=recency_days, y=basket_value,
   colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red")
 
 # Plot the clustered data using denormalized axis values
-ggplot() + geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
+ggplot() + ggtitle("Denormalized clusters") +
+  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
   colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red")
 
 
 # ========== 3b) ==========
+# Get the denormalized cluster centers
+denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
+r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
 
+# Calculate the denormalized centers' mean
+centersMean <- cbind(mean(denormalizedCenters[,'basket_value']), mean(denormalizedCenters[,'recency_days']))
+print("The mean of the denormalized centers is: ")
+centersMean
 
+# Calculate the denormalized centers' standard deviation
+centersStdev<- cbind(sd(denormalizedCenters[,'basket_value']), sd(denormalizedCenters[,'recency_days']))
+print("The standard deviation of the denormalized centers is: ")
+centersStdev
+
+# Plot denormalized data + denormalized cluster centers
+ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
+
+  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
+  colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
+
+  geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
+                                  y = denormalizedCenters[,'basket_value']),
+                                  color = "red", size = 4)
