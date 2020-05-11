@@ -10,7 +10,7 @@ groceries <- read.csv("GroceriesInitial.csv",header=TRUE,sep=",", stringsAsFacto
 #str(groceries)
 
 # unlist() combines the factor (list) representing each
-# column into a unified list.
+# #item column into a unified list.
 # levels() returns the distinct names of products found
 # in the unified list containing the combined products
 # of all transactions
@@ -26,7 +26,7 @@ productNames <- productNames[-blank]
 # For every product name in productNames, check if the product name appears inside
 # the unified list (row) returned by unlist(), returning TRUE or FALSE.
 # As a result, a list containing TRUE and FALSE values in the order of the given
-# product names in productNames is created and return, with the ith element in
+# product names in productNames is created and returned, with the ith element in
 # this list corresponding to the element of in the ith index of productNames.
 productsBinary <- as.data.frame(t(apply(groceries[,4:35],1, function(x)
 (productNames) %in% as.character(unlist(x)))))
@@ -42,8 +42,6 @@ filteredProductsBinary <- productsBinary[, c("citrus fruit", "tropical fruit", "
 # Combine groceries data frame's columns 1->3 with filteredProductsBinary 13 product columns
 # into a unified data frame.
 groceriesBinary <- cbind(groceries[,1:3], filteredProductsBinary)
-
-#str(groceriesBinary)
 
 # Quantile the basket_value column values into three discreet (and nearly equal) categories
 groceriesDiscrete <- groceriesBinary
@@ -124,6 +122,9 @@ normalizedCostAndRecency <- scale(costAndRecency)
 set.seed(1234)
 kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
 
+# Get points cluster distribution data from kmeansFit
+cluster <- kmeansFit$cluster
+
 # Visualize
 library("factoextra")
 #fviz_cluster(kmeansFit, normalizedCostAndRecency, ellipse.type = "convex")
@@ -131,58 +132,71 @@ library("factoextra")
 # Plot the clustered data returned from kmeans (using normalized axis values)
 ggplot() + ggtitle("Normalized clusters") +
   geom_point(data = as.data.frame(normalizedCostAndRecency), mapping = aes(x=recency_days, y=basket_value,
-  colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red")
+  colour = cluster)) + scale_color_gradient(low="blue", high="red")
 
 # Plot the clustered data using denormalized axis values
 ggplot() + ggtitle("Denormalized clusters") +
   geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-  colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red")
+  colour = cluster)) + scale_color_gradient(low="blue", high="red")
 
 
 # ========== 3b) ==========
-# Get the denormalized cluster centers
-denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
-r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
+## Get the denormalized cluster centers
+#denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
+#r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
+#
+## Calculate the denormalized centers' mean
+#centersMean <- cbind(mean(denormalizedCenters[,'recency_days']), mean(denormalizedCenters[,'basket_value']))
+#print("The mean of the denormalized centers is: ")
+#centersMean
+#
+## Calculate the denormalized centers' standard deviation
+#centersStdev<- cbind(sd(denormalizedCenters[,'recency_days']), sd(denormalizedCenters[,'basket_value']))
+#print("The standard deviation of the denormalized centers is: ")
+#centersStdev
+#
+## Plot denormalized data + denormalized cluster centers
+#ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
+#
+#  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
+#  colour = cluster)) + scale_color_gradient(low="blue", high="red") +
+#
+#  geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
+#                                  y = denormalizedCenters[,'basket_value']),
+#                                  color = "red", size = 4)
+#
+## Plot denormalized data + denormalized cluster centers + mean and standard deviation of denormalized cluster centers
+#ggplot() + ggtitle("Denormalized clusters + cluster centers + mean of centers + std of centers") +
+#
+#  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
+#  color = cluster)) + scale_color_gradient(low="blue", high="red") +
+#
+#  geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
+#                                  y = denormalizedCenters[,'basket_value']),
+#                                  color = "red", size = 4) +
+#
+#  geom_point(mapping = aes_string(x = centersMean[, 1],
+#                                  y = centersMean[, 2]),
+#                                  color = "green", size = 6) +
+#
+#  geom_point(mapping = aes_string(x = centersStdev[, 1],
+#                                  y = centersStdev[, 2]),
+#                                  color = "yellow", size = 6)
+#
+## Visualize the size of each cluster using a pie chart
+#pieRecencyValueData<- table(cluster)
+#pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
+#pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
+#    main = "Size of clusters (%)")
 
-# Calculate the denormalized centers' mean
-centersMean <- cbind(mean(denormalizedCenters[,'recency_days']), mean(denormalizedCenters[,'basket_value']))
-print("The mean of the denormalized centers is: ")
-centersMean
 
-# Calculate the denormalized centers' standard deviation
-centersStdev<- cbind(sd(denormalizedCenters[,'recency_days']), sd(denormalizedCenters[,'basket_value']))
-print("The standard deviation of the denormalized centers is: ")
-centersStdev
+# ========== 3b) ==========
 
-# Plot denormalized data + denormalized cluster centers
-ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
+# Convert cluster data to a binary form.
+clusterBinary <- as.data.frame(t(sapply(cluster, FUN=function(x)
+seq(1, nrow(kmeansFit$centers)) %in% x  )))
 
-  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-  colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
+# Set cluster names in clusterBinary
+names(clusterBinary) <- c("cluster1", "cluster2", "cluster3", "cluster4", "cluster5")
 
-  geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
-                                  y = denormalizedCenters[,'basket_value']),
-                                  color = "red", size = 4)
-
-# Plot denormalized data + denormalized cluster centers + mean and standard deviation of denormalized cluster centers
-ggplot() + ggtitle("Denormalized clusters + cluster centers + mean of centers + std of centers") +
-
-  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-  color = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
-
-  geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
-                                  y = denormalizedCenters[,'basket_value']),
-                                  color = "red", size = 4) +
-
-  geom_point(mapping = aes_string(x = centersMean[, 1],
-                                  y = centersMean[, 2]),
-                                  color = "green", size = 6) +
-
-  geom_point(mapping = aes_string(x = centersStdev[, 1],
-                                  y = centersStdev[, 2]),
-                                  color = "yellow", size = 6)
-
-# Visualize the size of each cluster using a pie chart
-pieRecencyValueData<- table(kmeansFit$cluster)
-pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
-pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep=""))
+groceriesWithClusters <- cbind(groceriesDiscrete, clusterBinary)
