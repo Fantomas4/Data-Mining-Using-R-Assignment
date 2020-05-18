@@ -190,7 +190,7 @@ ggplot() + ggtitle("Denormalized clusters") +
 #    main = "Size of clusters (%)")
 
 
-# ========== 3b) ==========
+# ========== 3c ==========
 
 # Convert cluster data to a binary form.
 clusterBinary <- as.data.frame(t(sapply(cluster, FUN=function(x)
@@ -200,3 +200,14 @@ seq(1, nrow(kmeansFit$centers)) %in% x  )))
 names(clusterBinary) <- c("cluster1", "cluster2", "cluster3", "cluster4", "cluster5")
 
 groceriesWithClusters <- cbind(groceriesDiscrete, clusterBinary)
+
+
+# ============================================== Exercise 4 ==============================================
+#str(groceriesWithClusters)
+productAndClusterRules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.0075)
+  ,control = list(verbose=FALSE))
+#
+productAndClusterRulesByConfidence <- sort(productAndClusterRules, by="confidence")
+
+print("Top 20 product and value category rules by Confidence: ")
+inspect(head(productAndClusterRulesByConfidence, n=20))
