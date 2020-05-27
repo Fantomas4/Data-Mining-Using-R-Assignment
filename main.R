@@ -3,7 +3,7 @@
 # Created by: Sierra Kilo
 # Created on: 07-May-20
 
-# Performs the actions described by exercise 1.
+# Perform the actions described by exercise 1.
 prepareData <- function() {
   #options(stringsAsFactors=T)
   groceries <- read.csv("GroceriesInitial.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
@@ -58,8 +58,9 @@ prepareData <- function() {
   return(groceriesDiscrete)
 }
 
+########################################################################################################################
 
-# Performs the actions described by exercise 2.
+# Perform the actions described by exercise 2.
 generateAssociationRules <- function(groceriesDiscrete) {
   library(arules)
 
@@ -114,17 +115,31 @@ generateAssociationRules <- function(groceriesDiscrete) {
 
 }
 
+########################################################################################################################
 
-# Performs the actions described by exercise 3.
-applyKmeansClustering <- function(groceriesDiscrete) {
+# Perform the actions described by exercise 3.
+filterNormalizeCostRecency <- function(groceriesDiscrete) {
   # ========== 3a) ==========
   costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
 
   # Normalize data
   normalizedCostAndRecency <- scale(costAndRecency)
 
+  return(normalizedCostAndRecency)
+}
+
+
+performClustering <- function(normalizedCostAndRecency) {
   set.seed(1234)
   kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
+
+  return(kmeansFit)
+}
+
+printClusteringCharts <- function(groceriesDiscrete) {
+  costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
+  normalizedCostAndRecency <- filterNormalizeCostRecency(groceriesDiscrete)
+  kmeansFit <- performClustering(normalizedCostAndRecency)
 
   # Get points cluster distribution data from kmeansFit
   cluster <- kmeansFit$cluster
@@ -192,11 +207,12 @@ applyKmeansClustering <- function(groceriesDiscrete) {
   pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
   pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
       main = "Size of clusters (%)")
+}
 
-
-  ## ========== 3c ==========
+generateGroceriesWithBinaryClusterData <- function(groceriesDiscrete, kmeansFit) {
+  # ========== 3c ==========
   # Convert cluster data to a binary form.
-  clusterBinary <- as.data.frame(t(sapply(cluster, FUN=function(x)
+  clusterBinary <- as.data.frame(t(sapply(kmeansFit$cluster, FUN=function(x)
   seq(1, nrow(kmeansFit$centers)) %in% x  )))
 
   # Set cluster names in clusterBinary
@@ -207,8 +223,9 @@ applyKmeansClustering <- function(groceriesDiscrete) {
   return(groceriesWithClusters)
 }
 
+########################################################################################################################
 
-# Performs the actions described by exercise 4.
+# Perform the actions described by exercise 4.
 clusterProductProfile <- function(groceriesWithClusters) {
   library(arules)
   #str(groceriesWithClusters)
@@ -221,16 +238,23 @@ clusterProductProfile <- function(groceriesWithClusters) {
   inspect(head(productAndClusterRulesByConfidence, n=20))
 }
 
-# ============================================== Exercise 1 ==============================================
-#str(prepareData())
+execute <- function() {
+  groceriesDiscrete <- prepareData()
+
+  # ============================================== Exercise 1 ==============================================
+  #str(groceriesDiscrete)
 
 
-# ============================================== Exercise 2 ==============================================
-#generateAssociationRules(prepareData())
+  # ============================================== Exercise 2 ==============================================
+  #generateAssociationRules(groceriesDiscrete)
 
 
-# ============================================== Exercise 3 ==============================================
-#applyKmeansClustering(prepareData())
+  # ============================================== Exercise 3 ==============================================
+  printClusteringCharts(groceriesDiscrete)
+  str(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 
-# ============================================== Exercise 4 ==============================================
-clusterProductProfile(applyKmeansClustering(prepareData()))
+  # ============================================== Exercise 4 ==============================================
+  #clusterProductProfile(applyKmeansClustering(groceriesDiscrete))
+}
+
+execute()
