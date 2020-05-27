@@ -115,11 +115,10 @@ generateAssociationRules <- function(groceriesDiscrete) {
 }
 
 
-# Performs the actions described by exercise 2.
+# Performs the actions described by exercise 3.
 applyKmeansClustering <- function(groceriesDiscrete) {
   # ========== 3a) ==========
   costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
-  #str(costAndRecency)
 
   # Normalize data
   normalizedCostAndRecency <- scale(costAndRecency)
@@ -131,81 +130,96 @@ applyKmeansClustering <- function(groceriesDiscrete) {
   cluster <- kmeansFit$cluster
 
   # Visualize
-  library("factoextra")
-  #fviz_cluster(kmeansFit, normalizedCostAndRecency, ellipse.type = "convex")
+  #library("factoextra")
+  library(ggplot2)
 
   # Plot the clustered data returned from kmeans (using normalized axis values)
-  ggplot() + ggtitle("Normalized clusters") +
+  print(ggplot() + ggtitle("Normalized clusters") +
     geom_point(data = as.data.frame(normalizedCostAndRecency), mapping = aes(x=recency_days, y=basket_value,
-    colour = cluster)) + scale_color_gradient(low="blue", high="red")
+    colour = cluster)) + scale_color_gradient(low="blue", high="red"))
 
   # Plot the clustered data using denormalized axis values
-  ggplot() + ggtitle("Denormalized clusters") +
+  print(ggplot() + ggtitle("Denormalized clusters") +
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    colour = cluster)) + scale_color_gradient(low="blue", high="red")
+    colour = cluster)) + scale_color_gradient(low="blue", high="red"))
 
 
-  ## ========== 3b) ==========
-  ## Get the denormalized cluster centers
-  #denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
-  #r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
-  #
-  ## Calculate the denormalized centers' mean
-  #centersMean <- cbind(mean(denormalizedCenters[,'recency_days']), mean(denormalizedCenters[,'basket_value']))
-  #print("The mean of the denormalized centers is: ")
-  #centersMean
-  #
-  ## Calculate the denormalized centers' standard deviation
-  #centersStdev<- cbind(sd(denormalizedCenters[,'recency_days']), sd(denormalizedCenters[,'basket_value']))
-  #print("The standard deviation of the denormalized centers is: ")
-  #centersStdev
-  #
-  ## Plot denormalized data + denormalized cluster centers
-  #ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
-  #
-  #  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-  #  colour = cluster)) + scale_color_gradient(low="blue", high="red") +
-  #
-  #  geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
-  #                                  y = denormalizedCenters[,'basket_value']),
-  #                                  color = "red", size = 4)
-  #
-  ## Plot denormalized data + denormalized cluster centers + mean and standard deviation of denormalized cluster centers
-  #ggplot() + ggtitle("Denormalized clusters + cluster centers + mean of centers + std of centers") +
-  #
-  #  geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-  #  color = cluster)) + scale_color_gradient(low="blue", high="red") +
-  #
-  #  geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
-  #                                  y = denormalizedCenters[,'basket_value']),
-  #                                  color = "red", size = 4) +
-  #
-  #  geom_point(mapping = aes_string(x = centersMean[, 1],
-  #                                  y = centersMean[, 2]),
-  #                                  color = "green", size = 6) +
-  #
-  #  geom_point(mapping = aes_string(x = centersStdev[, 1],
-  #                                  y = centersStdev[, 2]),
-  #                                  color = "yellow", size = 6)
-  #
-  ## Visualize the size of each cluster using a pie chart
-  #pieRecencyValueData<- table(cluster)
-  #pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
-  #pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
-  #    main = "Size of clusters (%)")
-  #
-  #
+  # ========== 3b) ==========
+  # Get the denormalized cluster centers
+  denormalizedCenters <- t(apply(kmeansFit$centers, 1, function(r)
+  r * attr(normalizedCostAndRecency, 'scaled:scale') + attr(normalizedCostAndRecency, 'scaled:center')))
+
+  # Calculate the denormalized centers' mean
+  centersMean <- cbind(mean(denormalizedCenters[,'recency_days']), mean(denormalizedCenters[,'basket_value']))
+  print("The mean of the denormalized centers is: ")
+  print(centersMean)
+
+  # Calculate the denormalized centers' standard deviation
+  centersStdev<- cbind(sd(denormalizedCenters[,'recency_days']), sd(denormalizedCenters[,'basket_value']))
+  print("The standard deviation of the denormalized centers is: ")
+  print(centersStdev)
+
+  # Plot denormalized data + denormalized cluster centers
+  print(ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
+
+    geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
+    colour = cluster)) + scale_color_gradient(low="blue", high="red") +
+
+    geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
+                                    y = denormalizedCenters[,'basket_value']),
+                                    color = "red", size = 4))
+
+  # Plot denormalized data + denormalized cluster centers + mean and standard deviation of denormalized cluster centers
+  print(ggplot() + ggtitle("Denormalized clusters + cluster centers + mean of centers + std of centers") +
+
+    geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
+    color = cluster)) + scale_color_gradient(low="blue", high="red") +
+
+    geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
+                                    y = denormalizedCenters[,'basket_value']),
+                                    color = "red", size = 4) +
+
+    geom_point(mapping = aes_string(x = centersMean[, 1],
+                                    y = centersMean[, 2]),
+                                    color = "green", size = 6) +
+
+    geom_point(mapping = aes_string(x = centersStdev[, 1],
+                                    y = centersStdev[, 2]),
+                                    color = "yellow", size = 6))
+
+  # Visualize the size of each cluster using a pie chart
+  pieRecencyValueData<- table(cluster)
+  pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
+  pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
+      main = "Size of clusters (%)")
+
+
   ## ========== 3c ==========
-  ## Convert cluster data to a binary form.
-  #clusterBinary <- as.data.frame(t(sapply(cluster, FUN=function(x)
-  #seq(1, nrow(kmeansFit$centers)) %in% x  )))
-  #
-  ## Set cluster names in clusterBinary
-  #names(clusterBinary) <- c("cluster1", "cluster2", "cluster3", "cluster4", "cluster5")
-  #
-  #groceriesWithClusters <- cbind(groceriesDiscrete, clusterBinary)
+  # Convert cluster data to a binary form.
+  clusterBinary <- as.data.frame(t(sapply(cluster, FUN=function(x)
+  seq(1, nrow(kmeansFit$centers)) %in% x  )))
+
+  # Set cluster names in clusterBinary
+  names(clusterBinary) <- c("cluster1", "cluster2", "cluster3", "cluster4", "cluster5")
+
+  groceriesWithClusters <- cbind(groceriesDiscrete, clusterBinary)
+
+  return(groceriesWithClusters)
 }
 
+
+# Performs the actions described by exercise 4.
+clusterProductProfile <- function(groceriesWithClusters) {
+  library(arules)
+  #str(groceriesWithClusters)
+  productAndClusterRules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.0075)
+    ,control = list(verbose=FALSE))
+  #
+  productAndClusterRulesByConfidence <- sort(productAndClusterRules, by="confidence")
+
+  print("Top 20 product and value category rules by Confidence: ")
+  inspect(head(productAndClusterRulesByConfidence, n=20))
+}
 
 # ============================================== Exercise 1 ==============================================
 #str(prepareData())
@@ -216,14 +230,7 @@ applyKmeansClustering <- function(groceriesDiscrete) {
 
 
 # ============================================== Exercise 3 ==============================================
-applyKmeansClustering(prepareData())
+#applyKmeansClustering(prepareData())
 
 # ============================================== Exercise 4 ==============================================
-##str(groceriesWithClusters)
-#productAndClusterRules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.0075)
-#  ,control = list(verbose=FALSE))
-##
-#productAndClusterRulesByConfidence <- sort(productAndClusterRules, by="confidence")
-#
-#print("Top 20 product and value category rules by Confidence: ")
-#inspect(head(productAndClusterRulesByConfidence, n=20))
+clusterProductProfile(applyKmeansClustering(prepareData()))
