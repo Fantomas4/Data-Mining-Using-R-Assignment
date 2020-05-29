@@ -48,12 +48,12 @@ prepareData <- function() {
   cutPoints <- quantile(groceriesDiscrete$basket_value, probs = seq(0, 1, 1/3), na.rm = TRUE, names = FALSE)
 
   # Divide the range of groceriesDiscrete into intervals and code the values in groceriesDiscrete according
-  # to which interval they fall into. For this purpose, a "basket_value_bin" column is added to the data frame,
+  # to which interval they fall into. For this purpose, a "basket_value_dis" column is added to the data frame,
   # with the labels "Low", "Medium" and "High" used for the resulting category.
-  groceriesDiscrete$basket_value_bin <- cut(groceriesDiscrete$basket_value, breaks = cutPoints,
+  groceriesDiscrete$basket_value_dis <- cut(groceriesDiscrete$basket_value, breaks = cutPoints,
                                             labels=c("Low","Medium","High"), include.lowest = TRUE)
 
-  #table(groceriesDiscrete$basket_value_bin)
+  #table(groceriesDiscrete$basket_value_dis)
   #str(groceriesDiscrete)
   return(groceriesDiscrete)
 }
@@ -61,46 +61,51 @@ prepareData <- function() {
 ########################################################################################################################
 
 # Perform the actions described by exercise 2.
-generateAssociationRules <- function(groceriesDiscrete) {
+testAssociationRules <- function(groceriesDiscrete) {
   library(arules)
 
   # ========== 2a) ==========
-  ## Apply apriori method to groceries discrete data with minimum support = 0.001
-  #print("rules test 1: ")
-  #rulesTest1 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.001)
-  #  ,control = list(verbose=FALSE))
-  ## Check the test results
-  #inspect(rulesTest1)
+  # Apply apriori method to groceries discrete data with minimum support = 0.001
+  print("rules test 1: ")
+  rulesTest1 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.001)
+    ,control = list(verbose=FALSE))
+  # Check the test results
+  inspect(head(rulesTest1, n=20))
 
-  ## Apply apriori method to groceries discrete data with minimum support = 0.2
-  #print("rules test 2: ")
-  #rulesTest2 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.02)
-  #  ,control = list(verbose=FALSE))
-  ## Check the test results
-  #inspect(rulesTest2)
-  #
-  ## Apply apriori method to groceries discrete data with minimum support = 0.8
-  #print("rules test 3: ")
-  #rulesTest3 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.03)
-  #  ,control = list(verbose=FALSE))
-  ## Check the test results
-  #inspect(rulesTest3)
-  #
-  ## Apply apriori method to groceries discrete data with minimum support = 1
-  #print("rules test 4: ")
-  #rulesTest4 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.04)
-  #  ,control = list(verbose=FALSE))
-  ## Check the test results
-  #inspect(rulesTest4)
+  # Apply apriori method to groceries discrete data with minimum support = 0.02
+  print("rules test 2: ")
+  rulesTest2 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.002)
+    ,control = list(verbose=FALSE))
+  # Check the test results
+  inspect(head(rulesTest2, n=20))
+
+  # Apply apriori method to groceries discrete data with minimum support = 0.03
+  print("rules test 3: ")
+  rulesTest3 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.03)
+    ,control = list(verbose=FALSE))
+  # Check the test results
+  inspect(head(rulesTest3, n=20))
+
+  # Apply apriori method to groceries discrete data with minimum support = 0.04
+  print("rules test 4: ")
+  rulesTest4 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.04)
+    ,control = list(verbose=FALSE))
+  # Check the test results
+  inspect(head(rulesTest4, n=20))
+}
+
+
+generateAssociationRules <- function(groceriesDiscrete) {
+  library(arules)
 
   # ========== 2b) ==========
-  #productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-1)], parameter = list(minlen=2, supp=0.001)
-  #  ,control = list(verbose=FALSE))
-  #
-  #productRulesByConfidence <- sort(productRules, by="confidence")
-  #
-  #print("Top 20 product rules by Confidence: ")
-  #inspect(head(productRulesByConfidence, n=20))
+  productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-1)], parameter = list(minlen=2, supp=0.001)
+    ,control = list(verbose=FALSE))
+
+  productRulesByConfidence <- sort(productRules, by="confidence")
+
+  print("Top 20 product rules by Confidence: ")
+  inspect(head(productRulesByConfidence, n=20))
 
 
   # ========== 2c) ==========
@@ -246,12 +251,13 @@ execute <- function() {
 
 
   # ============================================== Exercise 2 ==============================================
-  #generateAssociationRules(groceriesDiscrete)
+  #testAssociationRules(groceriesDiscrete)
+  generateAssociationRules(groceriesDiscrete)
 
 
   # ============================================== Exercise 3 ==============================================
-  printClusteringCharts(groceriesDiscrete)
-  str(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+  #printClusteringCharts(groceriesDiscrete)
+  #str(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 
   # ============================================== Exercise 4 ==============================================
   #clusterProductProfile(applyKmeansClustering(groceriesDiscrete))
