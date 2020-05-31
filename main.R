@@ -121,33 +121,23 @@ generateAssociationRules <- function(groceriesDiscrete) {
 }
 
 ########################################################################################################################
-
 # Perform the actions described by exercise 3.
-filterNormalizeCostRecency <- function(groceriesDiscrete) {
-  # ========== 3a) ==========
-  costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
-
-  # Normalize data
-  normalizedCostAndRecency <- scale(costAndRecency)
-
-  return(normalizedCostAndRecency)
-}
-
-
-performClustering <- function(normalizedCostAndRecency) {
-  set.seed(1234)
-  kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
-
-  return(kmeansFit)
-}
 
 printClusteringCharts <- function(groceriesDiscrete) {
-  costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
-  normalizedCostAndRecency <- filterNormalizeCostRecency(groceriesDiscrete)
-  kmeansFit <- performClustering(normalizedCostAndRecency)
+  # ========== 3a) ==========
 
-  # Get points cluster distribution data from kmeansFit
-  cluster <- kmeansFit$cluster
+  # Only keep the properties (filter the properties) "basket_value" and "recency_days" from groceriesDiscrete.
+  costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
+
+  # Normalize the values of "basket_value" and "recency_days".
+  # Normalization is essential in order to get accurate clustering results from k-means.
+  normalizedCostAndRecency <- scale(costAndRecency)
+
+  # Execute the k-means algorithm.
+  set.seed(1234)
+  kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
+  print("k-means raw result: ")
+  print(str(kmeansFit))
 
   # Visualize
   #library("factoextra")
@@ -156,12 +146,12 @@ printClusteringCharts <- function(groceriesDiscrete) {
   # Plot the clustered data returned from kmeans (using normalized axis values)
   print(ggplot() + ggtitle("Normalized clusters") +
     geom_point(data = as.data.frame(normalizedCostAndRecency), mapping = aes(x=recency_days, y=basket_value,
-    colour = cluster)) + scale_color_gradient(low="blue", high="red"))
+    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red"))
 
   # Plot the clustered data using denormalized axis values
   print(ggplot() + ggtitle("Denormalized clusters") +
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    colour = cluster)) + scale_color_gradient(low="blue", high="red"))
+    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red"))
 
 
   # ========== 3b) ==========
@@ -183,7 +173,7 @@ printClusteringCharts <- function(groceriesDiscrete) {
   print(ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
 
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    colour = cluster)) + scale_color_gradient(low="blue", high="red") +
+    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
 
     geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
                                     y = denormalizedCenters[,'basket_value']),
@@ -193,7 +183,7 @@ printClusteringCharts <- function(groceriesDiscrete) {
   print(ggplot() + ggtitle("Denormalized clusters + cluster centers + mean of centers + std of centers") +
 
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    color = cluster)) + scale_color_gradient(low="blue", high="red") +
+    color = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
 
     geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
                                     y = denormalizedCenters[,'basket_value']),
@@ -208,7 +198,8 @@ printClusteringCharts <- function(groceriesDiscrete) {
                                     color = "yellow", size = 6))
 
   # Visualize the size of each cluster using a pie chart
-  pieRecencyValueData<- table(cluster)
+  print(kmeansFit$size)
+  pieRecencyValueData<- table(kmeansFit$cluster)
   pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
   pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
       main = "Size of clusters (%)")
@@ -252,11 +243,11 @@ execute <- function() {
 
   # ============================================== Exercise 2 ==============================================
   #testAssociationRules(groceriesDiscrete)
-  generateAssociationRules(groceriesDiscrete)
+  #generateAssociationRules(groceriesDiscrete)
 
 
   # ============================================== Exercise 3 ==============================================
-  #printClusteringCharts(groceriesDiscrete)
+  printClusteringCharts(groceriesDiscrete)
   #str(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 
   # ============================================== Exercise 4 ==============================================
