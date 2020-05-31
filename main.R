@@ -197,12 +197,15 @@ printClusteringCharts <- function(groceriesDiscrete) {
                                     y = centersStdev[, 2]),
                                     color = "yellow", size = 6))
 
-  # Visualize the size of each cluster using a pie chart
-  print(kmeansFit$size)
+
+  ## Visualize the size of each cluster using a pie chart
+
+  #print(kmeansFit$size)
   pieRecencyValueData<- table(kmeansFit$cluster)
-  pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
-  pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
-      main = "Size of clusters (%)")
+  pieRecencyValueData <- sort(pieRecencyValueData/sum(pieRecencyValueData)*100, decreasing = TRUE)
+  #pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
+  #    main = "Size of clusters (%)")
+  pie(pieRecencyValueData, labels = paste(pieRecencyValueData), main = "Size of clusters (%)")
 }
 
 generateGroceriesWithBinaryClusterData <- function(groceriesDiscrete, kmeansFit) {
