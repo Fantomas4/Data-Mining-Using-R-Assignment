@@ -123,19 +123,35 @@ generateAssociationRules <- function(groceriesDiscrete) {
 ########################################################################################################################
 # Perform the actions described by exercise 3.
 
+filterNormalizeCostRecency <- function(groceriesDiscrete) {
+  # Only keep the properties (filter the properties) "basket_value" and "recency_days" from groceriesDiscrete.
+  costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
+
+  # Normalize the values of "basket_value" and "recency_days".
+  normalizedCostAndRecency <- scale(costAndRecency)
+
+  return(normalizedCostAndRecency)
+}
+
+performClustering <- function(normalizedCostAndRecency) {
+  # Execute the k-means algorithm.
+  set.seed(1234)
+  kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
+
+  return(kmeansFit)
+}
+
 printClusteringCharts <- function(groceriesDiscrete) {
   # ========== 3a) ==========
 
   # Only keep the properties (filter the properties) "basket_value" and "recency_days" from groceriesDiscrete.
   costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
 
-  # Normalize the values of "basket_value" and "recency_days".
+  # Only keep the properties (filter the properties) "basket_value" and "recency_days" from groceriesDiscrete.
   # Normalization is essential in order to get accurate clustering results from k-means.
-  normalizedCostAndRecency <- scale(costAndRecency)
+  normalizedCostAndRecency <- filterNormalizeCostRecency(groceriesDiscrete)
 
-  # Execute the k-means algorithm.
-  set.seed(1234)
-  kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
+  kmeansFit <- performClustering(normalizedCostAndRecency)
   print("k-means raw result: ")
   print(str(kmeansFit))
 
@@ -250,7 +266,7 @@ execute <- function() {
 
 
   # ============================================== Exercise 3 ==============================================
-  printClusteringCharts(groceriesDiscrete)
+  #printClusteringCharts(groceriesDiscrete)
   #str(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 
   # ============================================== Exercise 4 ==============================================
