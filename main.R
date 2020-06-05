@@ -120,26 +120,24 @@ generateAssociationRules <- function(groceriesDiscrete) {
   library(arules)
 
   # ========== 2b) ==========
-  # 0.00038
-  productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-3)], parameter = list(minlen=2, supp=0.000000000000000001)
+  productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-3)], parameter = list(minlen=2, supp=0.001)
     ,control = list(verbose=FALSE))
 
   productRulesByConfidence <- sort(productRules, by="confidence")
-  inspect(productRulesByConfidence)
 
   print("Top 20 product rules by Confidence: ")
   inspect(head(productRulesByConfidence, n=20))
 
 
-  ## ========== 2c) ==========
-  ## 0.018
-  #productAndValueRules <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.018)
-  #  ,control = list(verbose=FALSE))
-  #
-  #productAndValueRulesByConfidence <- sort(productAndValueRules, by="confidence")
-  #
-  #print("Top 20 product and value category rules by Confidence: ")
-  #inspect(head(productAndValueRulesByConfidence, n=20))
+  # ========== 2c) ==========
+  # 0.018
+  productAndValueRules <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.018)
+    ,control = list(verbose=FALSE))
+
+  productAndValueRulesByConfidence <- sort(productAndValueRules, by="confidence")
+
+  print("Top 20 product and value category rules by Confidence: ")
+  inspect(head(productAndValueRulesByConfidence, n=20))
 
 }
 
@@ -266,63 +264,75 @@ generateGroceriesWithBinaryClusterData <- function(groceriesDiscrete, kmeansFit)
 # Perform the actions described by exercise 4.
 clusterProductProfile <- function(groceriesWithClusters) {
   library(arules)
-  # 0.0080
 
-  ## Generate the top 20 product association rules for cluster1
-  #cluster1Rules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.001),
-  #  appearance = list (default="lhs",rhs="cluster1"), control = list(verbose=FALSE))
+  #summary(groceriesWithClusters)
   #
-  #cluster1Rules <- sort(cluster1Rules, by="confidence")
-  #
-  #print("Top 20 product and value category rules by Confidence for *** Cluster 1 ***: ")
-  #inspect(head(cluster1Rules, n=20))
+  #str(groceriesWithClusters)
+  ## supp=0.01, conf=0.4
+  ## supp=0.0248, conf=0.4
+  #supp=0.0095, conf=0.7
 
-  ## Generate the top 20 product association rules for cluster2
-  ## 0.0055
-  #cluster2Rules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.0055),
-  #  appearance = list (default="lhs",rhs="cluster2"), control = list(verbose=FALSE))
-  ##
-  #cluster2Rules <- sort(cluster2Rules, by="confidence")
-  #
-  #print("Top 20 product and value category rules by Confidence for *** Cluster 2 ***: ")
-  #inspect(head(cluster2Rules, n=20))
+  productClusterRules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.01, conf=0.4),
+     appearance = list (default="lhs",rhs=c("cluster1", "cluster2", "cluster3", "cluster4", "cluster5")),
+                                 control = list(verbose=FALSE))
+
+
+  productClusterRulesByConfidence <- sort(productClusterRules, by="confidence")
+
+  #inspect(productClusterRulesByConfidence)
+
+
+  print("Top 20 product/cluster rules by Confidence: ")
+  inspect(head(productClusterRulesByConfidence, n=20))
+
+
+  # Generate the top 20 product association rules for cluster1
+  cluster1Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.001),
+     appearance = list (default="lhs",rhs="cluster1"), control = list(verbose=FALSE))
+  cluster1Rules <- sort(cluster1Rules, by="confidence")
+
+  print("Top 20 rules by Confidence for *** Cluster 1 ***: ")
+  inspect(head(cluster1Rules, n=20))
+
+
+  # Generate the top 20 product association rules for cluster2
+  # 0.0055
+  cluster2Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.0055),
+    appearance = list (default="lhs",rhs="cluster2"), control = list(verbose=FALSE))
+  cluster2Rules <- sort(cluster2Rules, by="confidence")
+
+  print("Top 20 rules by Confidence for *** Cluster 2 ***: ")
+  inspect(head(cluster2Rules, n=20))
+
 
   # Generate the top 20 product association rules for cluster3
-  cluster3Rules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.000001),
+  cluster3Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.005, conf=0.1),
     appearance = list (default="lhs",rhs="cluster3"), control = list(verbose=FALSE))
-
   cluster3Rules <- sort(cluster3Rules, by="confidence")
 
-  #str(groceriesWithClusters)
-  print("Top 20 product and value category rules by Confidence for *** Cluster 3 ***: ")
+  print("Top 20 rules by Confidence for *** Cluster 3 ***: ")
   inspect(head(cluster3Rules, n=20))
 
-  ## Generate the top 20 product association rules for cluster1
-  #cluster4Rules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.000000000001),
-  #  appearance = list (default="lhs",rhs="cluster4"), control = list(verbose=FALSE))
-  ##
-  #cluster4Rules <- sort(cluster4Rules, by="confidence")
+  # Generate the top 20 product association rules for cluster4
+  #supp=0.012, conf=0.1
+  cluster4Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.01, conf=0.2),
+    appearance = list (default="lhs",rhs="cluster4"), control = list(verbose=FALSE))
   #
-  #print("Top 20 product and value category rules by Confidence for *** Cluster 4 ***: ")
-  #inspect(head(cluster4Rules, n=20))
+  cluster4Rules <- sort(cluster4Rules, by="confidence")
 
-  ## Generate the top 20 product association rules for cluster1
-  #cluster1Rules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.001),
-  #  appearance = list (default="lhs",rhs="cluster1"), control = list(verbose=FALSE))
-  ##
-  #cluster1Rules <- sort(cluster1Rules, by="confidence")
-  #
-  #print("Top 20 product and value category rules by Confidence for *** Cluster 1 ***: ")
-  #inspect(head(cluster1Rules, n=20))
-  #
-  ## Generate the top 20 product association rules for cluster1
-  #cluster1Rules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.001),
-  #  appearance = list (default="lhs",rhs="cluster1"), control = list(verbose=FALSE))
-  ##
-  #cluster1Rules <- sort(cluster1Rules, by="confidence")
-  #
-  #print("Top 20 product and value category rules by Confidence for *** Cluster 1 ***: ")
-  #inspect(head(cluster1Rules, n=20))
+  print("Top 20 rules by Confidence for *** Cluster 4 ***: ")
+  inspect(head(cluster4Rules, n=20))
+
+
+  # Generate the top 20 product association rules for cluster5
+  cluster5Rules <- apriori(groceriesWithClusters[,c(4:16, 18:24)], parameter = list(minlen=2, supp=0.001, conf=0.1),
+    appearance = list (default="lhs",rhs="cluster5"), control = list(verbose=FALSE))
+
+  cluster5Rules <- sort(cluster5Rules, by="confidence")
+
+  print("Top 20 rules by Confidence for *** Cluster 5 ***: ")
+  inspect(head(cluster5Rules, n=20))
+
 }
 
 execute <- function() {
@@ -334,7 +344,7 @@ execute <- function() {
 
 
   # ============================================== Exercise 2 ==============================================
-  testAssociationRules(groceriesDiscrete)
+  #testAssociationRules(groceriesDiscrete)
   #generateAssociationRules(groceriesDiscrete)
 
 
@@ -343,7 +353,28 @@ execute <- function() {
   #test <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
 
   # ============================================== Exercise 4 ==============================================
-  #clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+  clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 }
 
+test <- function() {
+  groceriesDiscrete <- prepareData()
+  groceriesClustered <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
+  #print(groceriesClustered$cluster1)
+  #str(groceriesClustered)
+
+
+  clusterNumbers <- performClustering(filterNormalizeCostRecency(groceriesDiscrete))$cluster
+
+  groceriesClustered <- cbind(groceriesClustered, clusterNumbers)
+
+  #library("writexl")
+  #write_xlsx(groceriesClustered,"testOutput2.csv")
+  #
+  #groceries <- read.csv("GroceriesClustered.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
+  #print(groceries$cluster0)
+  #str(groceries)
+
+}
+
+#test()
 execute()
