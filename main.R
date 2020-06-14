@@ -235,14 +235,11 @@ printClusteringCharts <- function(groceriesDiscrete) {
                                     color = "yellow", size = 6))
 
 
-  ## Visualize the size of each cluster using a pie chart
-
-  #print(kmeansFit$size)
+  # Visualize the size of each cluster using a pie chart
   pieRecencyValueData<- table(kmeansFit$cluster)
-  pieRecencyValueData <- sort(pieRecencyValueData/sum(pieRecencyValueData)*100, decreasing = TRUE)
-  #pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
-  #    main = "Size of clusters (%)")
-  pie(pieRecencyValueData, labels = paste(pieRecencyValueData), main = "Size of clusters (%)")
+  pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
+  pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep=""),
+      main = "Size of clusters (%)")
 }
 
 generateGroceriesWithBinaryClusterData <- function(groceriesDiscrete, kmeansFit) {
@@ -349,11 +346,11 @@ execute <- function() {
 
 
   # ============================================== Exercise 3 ==============================================
-  #printClusteringCharts(groceriesDiscrete)
+  printClusteringCharts(groceriesDiscrete)
   #test <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
 
   # ============================================== Exercise 4 ==============================================
-  clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+  #clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 }
 
 test <- function() {
