@@ -180,15 +180,21 @@ printClusteringCharts <- function(groceriesDiscrete) {
   #library("factoextra")
   library(ggplot2)
 
+  # Custom color palette used for color-grouping the clusters in the scatter plots
+  cbp2 <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+  # Create a factor containing the cluster grouping data (needed for ggplot)
+  clusters <- factor(kmeansFit$cluster)
+
   # Plot the clustered data returned from kmeans (using normalized axis values)
   print(ggplot() + ggtitle("Normalized clusters") +
     geom_point(data = as.data.frame(normalizedCostAndRecency), mapping = aes(x=recency_days, y=basket_value,
-    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red"))
+    colour = clusters)) + scale_colour_manual(values=cbp2))
 
   # Plot the clustered data using denormalized axis values
   print(ggplot() + ggtitle("Denormalized clusters") +
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red"))
+    colour = clusters)) + scale_colour_manual(values=cbp2))
 
 
   # ========== 3b) ==========
@@ -210,7 +216,7 @@ printClusteringCharts <- function(groceriesDiscrete) {
   print(ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
 
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
+    colour = clusters)) + scale_colour_manual(values=cbp2) +
 
     geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
                                     y = denormalizedCenters[,'basket_value']),
@@ -220,7 +226,7 @@ printClusteringCharts <- function(groceriesDiscrete) {
   print(ggplot() + ggtitle("Denormalized clusters + cluster centers + mean of centers + std of centers") +
 
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    color = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
+    color = clusters)) + scale_colour_manual(values=cbp2) +
 
     geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
                                     y = denormalizedCenters[,'basket_value']),
@@ -236,8 +242,9 @@ printClusteringCharts <- function(groceriesDiscrete) {
 
 
   # Visualize the size of each cluster using a pie chart
+  print(kmeansFit$size)
   pieRecencyValueData<- table(kmeansFit$cluster)
-  pieRecencyValueData <- pieRecencyValueData/sum(pieRecencyValueData)*100
+  pieRecencyValueData <- pieRecencyValueData / sum(pieRecencyValueData) * 100
   pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep=""),
       main = "Size of clusters (%)")
 }
