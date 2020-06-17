@@ -116,7 +116,7 @@ testAssociationRules <- function(groceriesDiscrete) {
 }
 
 
-generateAssociationRules <- function(groceriesDiscrete) {
+generateAssociationRulesByConfidence <- function(groceriesDiscrete) {
   library(arules)
 
   # ========== 2b) ==========
@@ -339,25 +339,80 @@ clusterProductProfile <- function(groceriesWithClusters) {
 
 }
 
-execute <- function() {
-  groceriesDiscrete <- prepareData()
-  #str(groceriesDiscrete)
+generateAssociationRulesBySupport <- function(groceriesWithClusters) {
+  library(arules)
 
+  # Generate association rules based on products
+  productRules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.001),
+     appearance = list (default="lhs",rhs="cluster2"), control = list(verbose=FALSE))
+
+  # Sort the generated product rules in descending order, based on their support
+  productRulesBySupport <- sort(productRules, by="support", decreasing = TRUE)
+
+  #str(groceriesWithClusters)
+  print("Top 5 product rules by Support: ")
+  inspect(head(productRulesBySupport, n=5))
+
+}
+
+printMeanBasketValues <- function(groceriesWithClusters) {
+  library(tidyverse)
+
+  # Convert data frame into a tibble data frame for easier manipulation
+  groceriesWithClusters <- as_tibble(groceriesWithClusters)
+
+
+
+
+
+
+  print("*** Mean basket_value for specified rule products: ***")
+
+  print("For rule {sausage,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(sausage == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean1 = mean(basket_value)))
+
+  print("For rule {tropical fruit,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(`tropical fruit` == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean2 = mean(basket_value)))
+
+  print("For rule {whole milk,other vegetables,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", `other vegetables` == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean3 = mean(basket_value)))
+  #
+  print("For rule {whole milk,yogurt,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", yogurt == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean4 = mean(basket_value)))
+  #
+  print("For rule {whole milk,rolls/buns,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", `rolls/buns` == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean5 = mean(basket_value)))
+}
+
+execute <- function() {
   # ============================================== Exercise 1 ==============================================
+  groceriesDiscrete <- prepareData()
   #str(groceriesDiscrete)
 
 
   # ============================================== Exercise 2 ==============================================
   #testAssociationRules(groceriesDiscrete)
-  #generateAssociationRules(groceriesDiscrete)
+  #generateAssociationRulesByConfidence(groceriesDiscrete)
 
 
   # ============================================== Exercise 3 ==============================================
-  printClusteringCharts(groceriesDiscrete)
+  #printClusteringCharts(groceriesDiscrete)
   #test <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
+
 
   # ============================================== Exercise 4 ==============================================
   #clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+
+
+  # ============================================== Exercise 4 ==============================================
+  generateAssociationRulesBySupport(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+  printMeanBasketValues(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+
 }
 
 test <- function() {
