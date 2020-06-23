@@ -361,11 +361,6 @@ printMeanBasketValues <- function(groceriesWithClusters) {
   # Convert data frame into a tibble data frame for easier manipulation
   groceriesWithClusters <- as_tibble(groceriesWithClusters)
 
-
-
-
-
-
   print("*** Mean basket_value for specified rule products: ***")
 
   print("For rule {sausage,pastry} => {cluster2}:")
@@ -409,31 +404,29 @@ execute <- function() {
   #clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 
 
-  # ============================================== Exercise 4 ==============================================
-  generateAssociationRulesBySupport(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
-  printMeanBasketValues(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
-
+  # ============================================== Exercise 5 ==============================================
+  #generateAssociationRulesBySupport(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+  #printMeanBasketValues(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 }
 
-test <- function() {
-  groceriesDiscrete <- prepareData()
-  groceriesClustered <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
-  #print(groceriesClustered$cluster1)
-  #str(groceriesClustered)
+#test <- function() {
+#  groceriesDiscrete <- prepareData()
+#  groceriesClustered <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
+#  #print(groceriesClustered$cluster1)
+#  #str(groceriesClustered)
+#
+#
+#  clusterNumbers <- performClustering(filterNormalizeCostRecency(groceriesDiscrete))$cluster
+#
+#  groceriesClustered <- cbind(groceriesClustered, clusterNumbers)
+#
+#  #library("writexl")
+#  #write_xlsx(groceriesClustered,"testOutput2.csv")
+#  #
+#  #groceries <- read.csv("GroceriesClustered.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
+#  #print(groceries$cluster0)
+#  #str(groceries)
+#
+#}
 
-
-  clusterNumbers <- performClustering(filterNormalizeCostRecency(groceriesDiscrete))$cluster
-
-  groceriesClustered <- cbind(groceriesClustered, clusterNumbers)
-
-  #library("writexl")
-  #write_xlsx(groceriesClustered,"testOutput2.csv")
-  #
-  #groceries <- read.csv("GroceriesClustered.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
-  #print(groceries$cluster0)
-  #str(groceries)
-
-}
-
-#test()
 execute()
