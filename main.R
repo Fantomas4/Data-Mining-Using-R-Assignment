@@ -3,23 +3,44 @@
 # Created by: Sierra Kilo
 # Created on: 07-May-20
 
-# Perform the actions described by exercise 1.
-prepareData <- function() {
-  #options(stringsAsFactors=T)
-  groceries <- read.csv("GroceriesInitial.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
-  #str(groceries)
-
+binarize <-function(dataColumns, extraColumns=NULL){
   # unlist() combines the factor (list) representing each
   # #item column into a unified list.
   # levels() returns the distinct names of products found
   # in the unified list containing the combined products
   # of all transactions
-  productNames <- levels(unlist(groceries[,4:35]))
-  #print(productNames)
+  columnNames <- levels(unlist(dataColumns))
 
-  # Remove the "" element from productNames list
-  blank <- which(productNames == "") #row 102
-  productNames <- productNames[-blank]
+  # Remove the "" element from (if it exists) from column names
+  blank <- which(columnNames == "")
+  if (length(blank) !=0)
+    columnNames <- columnNames[-c(blank)]
+
+  # Apply anonymous function(x) to every row of dataColumns (MARGIN: 1).
+  # For every row, combine the elements of each column into a unified list using unlist().
+  # For every name in columnNames, check if the name appears inside
+  # the unified list (row) returned by unlist(), returning TRUE or FALSE.
+  # As a result, a list containing TRUE and FALSE values in the order of the given
+  # names in columnNames is created and returned, with the ith element in
+  # this list corresponding to the element of in the ith index of columnNames.
+  binaryResult <- as.data.frame(t(apply(dataColumns, 1
+    , function(x) (columnNames) %in% as.character(unlist(x)))))
+
+  # Set the names of productsBinary's elements to productNames' names.
+  names(binaryResult) <- columnNames
+
+  # Combine data columns and extra columns into a unified data frame.
+  if (is.null(extraColumns)==FALSE)
+    binaryResult<- cbind(extraColumns, binaryResult)
+
+  return(binaryResult)
+}
+
+# Perform the actions described by exercise 1.
+prepareData <- function() {
+  #options(stringsAsFactors=T)
+  groceries <- read.csv("GroceriesInitial.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
+  #str(groceries)
 
   # Apply anonymous function(x) to every row of columns 4->35 of groceries (MARGIN: 1).
   # For every row, combine the elements of each column into a unified list using unlist().
@@ -28,11 +49,9 @@ prepareData <- function() {
   # As a result, a list containing TRUE and FALSE values in the order of the given
   # product names in productNames is created and returned, with the ith element in
   # this list corresponding to the element of in the ith index of productNames.
-  productsBinary <- as.data.frame(t(apply(groceries[,4:35],1, function(x)
-  (productNames) %in% as.character(unlist(x)))))
-
-  # Set the names of productsBinary's elements to productNames' names.
-  names(productsBinary) <- productNames
+  #productsBinary <- as.data.frame(t(apply(groceries[,4:35],1, function(x)
+  #(productNames) %in% as.character(unlist(x)))))
+  productsBinary <- binarize(groceries[,4:35], groceries[,1:3])
 
   # Keep only the 13 columns corresponding to the 13 products we need for our analysis
   # as stated by the assignment's description.
@@ -50,11 +69,13 @@ prepareData <- function() {
   # Divide the range of groceriesDiscrete into intervals and code the values in groceriesDiscrete according
   # to which interval they fall into. For this purpose, a "basket_value_dis" column is added to the data frame,
   # with the labels "Low", "Medium" and "High" used for the resulting category.
-  groceriesDiscrete$basket_value_dis <- cut(groceriesDiscrete$basket_value, breaks = cutPoints,
-                                            labels=c("Low","Medium","High"), include.lowest = TRUE)
+  groceriesDiscrete$basket_value_dis <- cut(groceriesDiscrete$basket_value, breaks = cutPoints
+    ,labels=c("low_value_basket","medium_value_basket","high_value_basket"), include.lowest = TRUE)
 
-  #table(groceriesDiscrete$basket_value_dis)
+  groceriesDiscrete <- binarize(as.data.frame(groceriesDiscrete$basket_value_dis), groceriesDiscrete)
+  groceriesDiscrete <- groceriesDiscrete[, -c(which(colnames(groceriesDiscrete)=="basket_value_dis"))]
   #str(groceriesDiscrete)
+
   return(groceriesDiscrete)
 }
 
@@ -74,7 +95,7 @@ testAssociationRules <- function(groceriesDiscrete) {
 
   # Apply apriori method to groceries discrete data with minimum support = 0.02
   print("rules test 2: ")
-  rulesTest2 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.002)
+  rulesTest2 <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.02)
     ,control = list(verbose=FALSE))
   # Check the test results
   inspect(head(rulesTest2, n=20))
@@ -95,11 +116,11 @@ testAssociationRules <- function(groceriesDiscrete) {
 }
 
 
-generateAssociationRules <- function(groceriesDiscrete) {
+generateAssociationRulesByConfidence <- function(groceriesDiscrete) {
   library(arules)
 
   # ========== 2b) ==========
-  productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-1)], parameter = list(minlen=2, supp=0.001)
+  productRules <- apriori(groceriesDiscrete[,4:(ncol(groceriesDiscrete)-3)], parameter = list(minlen=2, supp=0.001)
     ,control = list(verbose=FALSE))
 
   productRulesByConfidence <- sort(productRules, by="confidence")
@@ -123,19 +144,35 @@ generateAssociationRules <- function(groceriesDiscrete) {
 ########################################################################################################################
 # Perform the actions described by exercise 3.
 
+filterNormalizeCostRecency <- function(groceriesDiscrete) {
+  # Only keep the properties (filter the properties) "basket_value" and "recency_days" from groceriesDiscrete.
+  costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
+
+  # Normalize the values of "basket_value" and "recency_days".
+  normalizedCostAndRecency <- scale(costAndRecency)
+
+  return(normalizedCostAndRecency)
+}
+
+performClustering <- function(normalizedCostAndRecency) {
+  # Execute the k-means algorithm.
+  set.seed(1234)
+  kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
+
+  return(kmeansFit)
+}
+
 printClusteringCharts <- function(groceriesDiscrete) {
   # ========== 3a) ==========
 
   # Only keep the properties (filter the properties) "basket_value" and "recency_days" from groceriesDiscrete.
   costAndRecency <- groceriesDiscrete[,c("basket_value", "recency_days")]
 
-  # Normalize the values of "basket_value" and "recency_days".
+  # Only keep the properties (filter the properties) "basket_value" and "recency_days" from groceriesDiscrete.
   # Normalization is essential in order to get accurate clustering results from k-means.
-  normalizedCostAndRecency <- scale(costAndRecency)
+  normalizedCostAndRecency <- filterNormalizeCostRecency(groceriesDiscrete)
 
-  # Execute the k-means algorithm.
-  set.seed(1234)
-  kmeansFit <- kmeans(normalizedCostAndRecency, 5, nstart = 1000, iter.max = 1000)
+  kmeansFit <- performClustering(normalizedCostAndRecency)
   print("k-means raw result: ")
   print(str(kmeansFit))
 
@@ -143,15 +180,21 @@ printClusteringCharts <- function(groceriesDiscrete) {
   #library("factoextra")
   library(ggplot2)
 
+  # Custom color palette used for color-grouping the clusters in the scatter plots
+  cbp2 <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+  # Create a factor containing the cluster grouping data (needed for ggplot)
+  clusters <- factor(kmeansFit$cluster)
+
   # Plot the clustered data returned from kmeans (using normalized axis values)
   print(ggplot() + ggtitle("Normalized clusters") +
     geom_point(data = as.data.frame(normalizedCostAndRecency), mapping = aes(x=recency_days, y=basket_value,
-    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red"))
+    colour = clusters)) + scale_colour_manual(values=cbp2))
 
   # Plot the clustered data using denormalized axis values
   print(ggplot() + ggtitle("Denormalized clusters") +
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red"))
+    colour = clusters)) + scale_colour_manual(values=cbp2))
 
 
   # ========== 3b) ==========
@@ -173,7 +216,7 @@ printClusteringCharts <- function(groceriesDiscrete) {
   print(ggplot() + ggtitle("Denormalized clusters and denormalized cluster centers") +
 
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    colour = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
+    colour = clusters)) + scale_colour_manual(values=cbp2) +
 
     geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
                                     y = denormalizedCenters[,'basket_value']),
@@ -183,7 +226,7 @@ printClusteringCharts <- function(groceriesDiscrete) {
   print(ggplot() + ggtitle("Denormalized clusters + cluster centers + mean of centers + std of centers") +
 
     geom_point(data = costAndRecency, mapping = aes(x=recency_days, y=basket_value,
-    color = kmeansFit$cluster)) + scale_color_gradient(low="blue", high="red") +
+    color = clusters)) + scale_colour_manual(values=cbp2) +
 
     geom_point(mapping = aes_string(x = denormalizedCenters[,'recency_days'],
                                     y = denormalizedCenters[,'basket_value']),
@@ -198,14 +241,12 @@ printClusteringCharts <- function(groceriesDiscrete) {
                                     color = "yellow", size = 6))
 
 
-  ## Visualize the size of each cluster using a pie chart
-
-  #print(kmeansFit$size)
+  # Visualize the size of each cluster using a pie chart
+  print(kmeansFit$size)
   pieRecencyValueData<- table(kmeansFit$cluster)
-  pieRecencyValueData <- sort(pieRecencyValueData/sum(pieRecencyValueData)*100, decreasing = TRUE)
-  #pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep = ""),
-  #    main = "Size of clusters (%)")
-  pie(pieRecencyValueData, labels = paste(pieRecencyValueData), main = "Size of clusters (%)")
+  pieRecencyValueData <- pieRecencyValueData / sum(pieRecencyValueData) * 100
+  pie(pieRecencyValueData, labels = paste(names(pieRecencyValueData), "\n", pieRecencyValueData, sep=""),
+      main = "Size of clusters (%)")
 }
 
 generateGroceriesWithBinaryClusterData <- function(groceriesDiscrete, kmeansFit) {
@@ -227,34 +268,165 @@ generateGroceriesWithBinaryClusterData <- function(groceriesDiscrete, kmeansFit)
 # Perform the actions described by exercise 4.
 clusterProductProfile <- function(groceriesWithClusters) {
   library(arules)
-  #str(groceriesWithClusters)
-  productAndClusterRules <- apriori(groceriesWithClusters[,c(4:16, 18:22)], parameter = list(minlen=2, supp=0.0075)
-    ,control = list(verbose=FALSE))
-  #
-  productAndClusterRulesByConfidence <- sort(productAndClusterRules, by="confidence")
 
-  print("Top 20 product and value category rules by Confidence: ")
-  inspect(head(productAndClusterRulesByConfidence, n=20))
+  #summary(groceriesWithClusters)
+  #
+  #str(groceriesWithClusters)
+  ## supp=0.01, conf=0.4
+  ## supp=0.0248, conf=0.4
+  #supp=0.0095, conf=0.7
+
+  productClusterRules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.01, conf=0.4),
+     appearance = list (default="lhs",rhs=c("cluster1", "cluster2", "cluster3", "cluster4", "cluster5")),
+                                 control = list(verbose=FALSE))
+
+
+  productClusterRulesByConfidence <- sort(productClusterRules, by="confidence")
+
+  #inspect(productClusterRulesByConfidence)
+
+
+  print("Top 20 product/cluster rules by Confidence: ")
+  inspect(head(productClusterRulesByConfidence, n=20))
+
+
+  # Generate the top 20 product association rules for cluster1
+  cluster1Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.001),
+     appearance = list (default="lhs",rhs="cluster1"), control = list(verbose=FALSE))
+  cluster1Rules <- sort(cluster1Rules, by="confidence")
+
+  print("Top 20 rules by Confidence for *** Cluster 1 ***: ")
+  inspect(head(cluster1Rules, n=20))
+
+
+  # Generate the top 20 product association rules for cluster2
+  # 0.0055
+  cluster2Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.0055),
+    appearance = list (default="lhs",rhs="cluster2"), control = list(verbose=FALSE))
+  cluster2Rules <- sort(cluster2Rules, by="confidence")
+
+  print("Top 20 rules by Confidence for *** Cluster 2 ***: ")
+  inspect(head(cluster2Rules, n=20))
+
+
+  # Generate the top 20 product association rules for cluster3
+  cluster3Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.005, conf=0.1),
+    appearance = list (default="lhs",rhs="cluster3"), control = list(verbose=FALSE))
+  cluster3Rules <- sort(cluster3Rules, by="confidence")
+
+  print("Top 20 rules by Confidence for *** Cluster 3 ***: ")
+  inspect(head(cluster3Rules, n=20))
+
+  # Generate the top 20 product association rules for cluster4
+  #supp=0.012, conf=0.1
+  cluster4Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.01, conf=0.2),
+    appearance = list (default="lhs",rhs="cluster4"), control = list(verbose=FALSE))
+  #
+  cluster4Rules <- sort(cluster4Rules, by="confidence")
+
+  print("Top 20 rules by Confidence for *** Cluster 4 ***: ")
+  inspect(head(cluster4Rules, n=20))
+
+
+  # Generate the top 20 product association rules for cluster5
+  cluster5Rules <- apriori(groceriesWithClusters[,c(4:16, 18:24)], parameter = list(minlen=2, supp=0.001, conf=0.1),
+    appearance = list (default="lhs",rhs="cluster5"), control = list(verbose=FALSE))
+
+  cluster5Rules <- sort(cluster5Rules, by="confidence")
+
+  print("Top 20 rules by Confidence for *** Cluster 5 ***: ")
+  inspect(head(cluster5Rules, n=20))
+
+}
+
+generateAssociationRulesBySupport <- function(groceriesWithClusters) {
+  library(arules)
+
+  # Generate association rules based on products
+  productRules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.001),
+     appearance = list (default="lhs",rhs="cluster2"), control = list(verbose=FALSE))
+
+  # Sort the generated product rules in descending order, based on their support
+  productRulesBySupport <- sort(productRules, by="support", decreasing = TRUE)
+
+  #str(groceriesWithClusters)
+  print("Top 5 product rules by Support: ")
+  inspect(head(productRulesBySupport, n=5))
+
+}
+
+printMeanBasketValues <- function(groceriesWithClusters) {
+  library(tidyverse)
+
+  # Convert data frame into a tibble data frame for easier manipulation
+  groceriesWithClusters <- as_tibble(groceriesWithClusters)
+
+  print("*** Mean basket_value for specified rule products: ***")
+
+  print("For rule {sausage,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(sausage == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean1 = mean(basket_value)))
+
+  print("For rule {tropical fruit,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(`tropical fruit` == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean2 = mean(basket_value)))
+
+  print("For rule {whole milk,other vegetables,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", `other vegetables` == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean3 = mean(basket_value)))
+  #
+  print("For rule {whole milk,yogurt,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", yogurt == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean4 = mean(basket_value)))
+  #
+  print("For rule {whole milk,rolls/buns,pastry} => {cluster2}:")
+  print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", `rolls/buns` == "TRUE", pastry == "TRUE") %>%
+          summarise(basket_value_mean5 = mean(basket_value)))
 }
 
 execute <- function() {
-  groceriesDiscrete <- prepareData()
-
   # ============================================== Exercise 1 ==============================================
+  groceriesDiscrete <- prepareData()
   #str(groceriesDiscrete)
 
 
   # ============================================== Exercise 2 ==============================================
   #testAssociationRules(groceriesDiscrete)
-  #generateAssociationRules(groceriesDiscrete)
+  #generateAssociationRulesByConfidence(groceriesDiscrete)
 
 
   # ============================================== Exercise 3 ==============================================
-  printClusteringCharts(groceriesDiscrete)
-  #str(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+  #printClusteringCharts(groceriesDiscrete)
+  #test <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
+
 
   # ============================================== Exercise 4 ==============================================
-  #clusterProductProfile(applyKmeansClustering(groceriesDiscrete))
+  #clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+
+
+  # ============================================== Exercise 5 ==============================================
+  #generateAssociationRulesBySupport(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+  #printMeanBasketValues(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 }
+
+#test <- function() {
+#  groceriesDiscrete <- prepareData()
+#  groceriesClustered <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
+#  #print(groceriesClustered$cluster1)
+#  #str(groceriesClustered)
+#
+#
+#  clusterNumbers <- performClustering(filterNormalizeCostRecency(groceriesDiscrete))$cluster
+#
+#  groceriesClustered <- cbind(groceriesClustered, clusterNumbers)
+#
+#  #library("writexl")
+#  #write_xlsx(groceriesClustered,"testOutput2.csv")
+#  #
+#  #groceries <- read.csv("GroceriesClustered.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
+#  #print(groceries$cluster0)
+#  #str(groceries)
+#
+#}
 
 execute()
