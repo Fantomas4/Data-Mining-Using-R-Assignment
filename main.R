@@ -1,6 +1,6 @@
-# Title     : TODO
-# Objective : TODO
-# Created by: Sierra Kilo
+# Title     : Groceries Analysis using R
+# Objective : Perform Big Data analysis on a data set containing the transaction records of a grocery shop.
+# Created by: Stefanos Karamperas
 # Created on: 07-May-20
 
 binarize <-function(dataColumns, extraColumns=NULL){
@@ -130,7 +130,6 @@ generateAssociationRulesByConfidence <- function(groceriesDiscrete) {
 
 
   # ========== 2c) ==========
-  # 0.018
   productAndValueRules <- apriori(groceriesDiscrete[,4:ncol(groceriesDiscrete)], parameter = list(minlen=2, supp=0.018)
     ,control = list(verbose=FALSE))
 
@@ -177,7 +176,6 @@ printClusteringCharts <- function(groceriesDiscrete) {
   print(str(kmeansFit))
 
   # Visualize
-  #library("factoextra")
   library(ggplot2)
 
   # Custom color palette used for color-grouping the clusters in the scatter plots
@@ -269,21 +267,12 @@ generateGroceriesWithBinaryClusterData <- function(groceriesDiscrete, kmeansFit)
 clusterProductProfile <- function(groceriesWithClusters) {
   library(arules)
 
-  #summary(groceriesWithClusters)
-  #
-  #str(groceriesWithClusters)
-  ## supp=0.01, conf=0.4
-  ## supp=0.0248, conf=0.4
-  #supp=0.0095, conf=0.7
-
   productClusterRules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.01, conf=0.4),
      appearance = list (default="lhs",rhs=c("cluster1", "cluster2", "cluster3", "cluster4", "cluster5")),
                                  control = list(verbose=FALSE))
 
 
   productClusterRulesByConfidence <- sort(productClusterRules, by="confidence")
-
-  #inspect(productClusterRulesByConfidence)
 
 
   print("Top 20 product/cluster rules by Confidence: ")
@@ -321,7 +310,7 @@ clusterProductProfile <- function(groceriesWithClusters) {
   #supp=0.012, conf=0.1
   cluster4Rules <- apriori(groceriesWithClusters[,c(4:16, 20:24)], parameter = list(minlen=2, supp=0.01, conf=0.2),
     appearance = list (default="lhs",rhs="cluster4"), control = list(verbose=FALSE))
-  #
+
   cluster4Rules <- sort(cluster4Rules, by="confidence")
 
   print("Top 20 rules by Confidence for *** Cluster 4 ***: ")
@@ -374,11 +363,11 @@ printMeanBasketValues <- function(groceriesWithClusters) {
   print("For rule {whole milk,other vegetables,pastry} => {cluster2}:")
   print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", `other vegetables` == "TRUE", pastry == "TRUE") %>%
           summarise(basket_value_mean3 = mean(basket_value)))
-  #
+
   print("For rule {whole milk,yogurt,pastry} => {cluster2}:")
   print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", yogurt == "TRUE", pastry == "TRUE") %>%
           summarise(basket_value_mean4 = mean(basket_value)))
-  #
+
   print("For rule {whole milk,rolls/buns,pastry} => {cluster2}:")
   print(groceriesWithClusters %>% filter(`whole milk` == "TRUE", `rolls/buns` == "TRUE", pastry == "TRUE") %>%
           summarise(basket_value_mean5 = mean(basket_value)))
@@ -387,46 +376,22 @@ printMeanBasketValues <- function(groceriesWithClusters) {
 execute <- function() {
   # ============================================== Exercise 1 ==============================================
   groceriesDiscrete <- prepareData()
-  #str(groceriesDiscrete)
 
 
   # ============================================== Exercise 2 ==============================================
-  #testAssociationRules(groceriesDiscrete)
-  #generateAssociationRulesByConfidence(groceriesDiscrete)
+  testAssociationRules(groceriesDiscrete)
+  generateAssociationRulesByConfidence(groceriesDiscrete)
 
 
   # ============================================== Exercise 3 ==============================================
-  #printClusteringCharts(groceriesDiscrete)
-  #test <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
+  printClusteringCharts(groceriesDiscrete)
+  generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
 
 
   # ============================================== Exercise 4 ==============================================
-  #clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
+  clusterProductProfile(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 
 
-  # ============================================== Exercise 5 ==============================================
-  #generateAssociationRulesBySupport(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
-  #printMeanBasketValues(generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete))))
 }
-
-#test <- function() {
-#  groceriesDiscrete <- prepareData()
-#  groceriesClustered <- generateGroceriesWithBinaryClusterData(groceriesDiscrete, performClustering(filterNormalizeCostRecency(groceriesDiscrete)))
-#  #print(groceriesClustered$cluster1)
-#  #str(groceriesClustered)
-#
-#
-#  clusterNumbers <- performClustering(filterNormalizeCostRecency(groceriesDiscrete))$cluster
-#
-#  groceriesClustered <- cbind(groceriesClustered, clusterNumbers)
-#
-#  #library("writexl")
-#  #write_xlsx(groceriesClustered,"testOutput2.csv")
-#  #
-#  #groceries <- read.csv("GroceriesClustered.csv",header=TRUE,sep=",", stringsAsFactors=TRUE)
-#  #print(groceries$cluster0)
-#  #str(groceries)
-#
-#}
 
 execute()
